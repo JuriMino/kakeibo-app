@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Tailwind CSS よく使うクラス チートシート</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.7;
+    max-width: 980px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #2c7be5;
+    padding-bottom: 10px;
+  }
+  h2 {
+    margin-top: 40px;
+    border-left: 5px solid #2c7be5;
+    background: #eef4ff;
+    padding: 8px 14px;
+  }
+  h3 {
+    margin-top: 24px;
+    color: #2c7be5;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0 24px;
+    background: #fff;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #2c7be5;
+    color: #fff;
+    white-space: nowrap;
+  }
+  td.cls {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    color: #c7254e;
+    background: #f9f2f4;
+    white-space: nowrap;
+  }
+  pre {
+    background: #1e1e1e;
+    color: #f5f5f5;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 13px;
+  }
+  code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    color: #c7254e;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  .tip {
+    background: #fff7d6;
+    border-left: 5px solid #f0b400;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  .demo {
+    border: 1px dashed #aaa;
+    padding: 16px;
+    margin: 8px 0 16px;
+    background: #fff;
+    border-radius: 6px;
+  }
+  .meta { color: #777; font-size: 0.9em; }
+  nav.toc {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 12px 18px;
+    border-radius: 6px;
+  }
+  nav.toc a { color: #2c7be5; text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>Tailwind CSS よく使うクラス チートシート</h1>
+<p class="meta">作成日: 2026-05-06 / kakeibo-appで使用したクラスを中心に整理</p>
+
+<nav class="toc">
+  <strong>目次</strong>
+  <ul>
+    <li><a href="#basic">1. 基本の考え方</a></li>
+    <li><a href="#layout">2. レイアウト（Flexbox / Grid）</a></li>
+    <li><a href="#spacing">3. 余白（padding / margin / gap）</a></li>
+    <li><a href="#sizing">4. サイズ（width / height）</a></li>
+    <li><a href="#typography">5. テキスト</a></li>
+    <li><a href="#colors">6. 色（背景・文字・枠）</a></li>
+    <li><a href="#border">7. 枠線・角丸・影</a></li>
+    <li><a href="#state">8. ホバー・フォーカス・状態</a></li>
+    <li><a href="#form">9. フォーム部品</a></li>
+    <li><a href="#table">10. テーブル</a></li>
+    <li><a href="#responsive">11. レスポンシブ</a></li>
+  </ul>
+</nav>
+
+<h2 id="basic">1. 基本の考え方</h2>
+<p>
+  Tailwind は <strong>「クラス名 = CSSプロパティ1つ」</strong>のユーティリティCSS。
+  クラスを組み合わせるだけでスタイルが完成する。
+</p>
+<pre><code>&lt;!-- 例: 白背景 + 角丸 + 影 + パディング --&gt;
+&lt;div class="bg-white rounded-lg shadow p-6"&gt;
+    支出カード
+&lt;/div&gt;</code></pre>
+
+<div class="tip">
+  <strong>命名のパターン:</strong>
+  <ul>
+    <li><code>{プロパティ}-{値}</code> → <code>p-4</code>(padding), <code>text-sm</code>(文字サイズ)</li>
+    <li><code>{プロパティ}-{色}-{濃さ}</code> → <code>bg-emerald-600</code>, <code>text-gray-700</code></li>
+    <li><code>{画面幅}:{クラス}</code> → <code>md:flex</code>(中サイズ以上で flex)</li>
+    <li><code>{状態}:{クラス}</code> → <code>hover:bg-blue-700</code>(ホバー時)</li>
+  </ul>
+</div>
+
+<h2 id="layout">2. レイアウト（Flexbox / Grid）</h2>
+
+<h3>Flexbox</h3>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">flex</td><td>要素を横並びに（display: flex）</td></tr>
+  <tr><td class="cls">inline-flex</td><td>インラインの flex</td></tr>
+  <tr><td class="cls">flex-col</td><td>縦方向に並べる</td></tr>
+  <tr><td class="cls">items-center</td><td>交差軸（縦）中央揃え</td></tr>
+  <tr><td class="cls">items-start / items-end</td><td>上揃え / 下揃え</td></tr>
+  <tr><td class="cls">justify-center</td><td>主軸（横）中央揃え</td></tr>
+  <tr><td class="cls">justify-between</td><td>両端寄せ（間にスペース）</td></tr>
+  <tr><td class="cls">justify-end</td><td>右寄せ</td></tr>
+  <tr><td class="cls">space-x-2 / space-y-4</td><td>子要素の間隔（横/縦）</td></tr>
+</table>
+
+<pre><code>&lt;!-- 「合計」と「新規追加ボタン」を両端に配置（家計簿で使用） --&gt;
+&lt;div class="flex items-center justify-between"&gt;
+    &lt;p&gt;合計支出額&lt;/p&gt;
+    &lt;a href="..."&gt;+ 新規追加&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+
+<h3>Grid</h3>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">grid</td><td>display: grid</td></tr>
+  <tr><td class="cls">grid-cols-2</td><td>2列</td></tr>
+  <tr><td class="cls">grid-cols-3</td><td>3列</td></tr>
+  <tr><td class="cls">gap-4</td><td>セル間の余白</td></tr>
+</table>
+
+<pre><code>&lt;!-- 金額・支出日を2列に並べる --&gt;
+&lt;div class="grid grid-cols-2 gap-4"&gt;
+    &lt;div&gt;金額&lt;/div&gt;
+    &lt;div&gt;支出日&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+<div class="tip">
+  ⚠️ <code>grif-cols-2</code> のような typo に注意（kakeibo-appの_form.blade.phpに存在）。
+  Tailwindはクラス名が間違っていても無視するだけでエラーは出ないので、効かない時は綴りを疑う。
+</div>
+
+<h2 id="spacing">3. 余白（padding / margin / gap）</h2>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">p-4</td><td>上下左右に padding</td></tr>
+  <tr><td class="cls">px-4</td><td>左右の padding</td></tr>
+  <tr><td class="cls">py-2</td><td>上下の padding</td></tr>
+  <tr><td class="cls">pt-4 / pb-4 / pl-4 / pr-4</td><td>上 / 下 / 左 / 右 のみ</td></tr>
+  <tr><td class="cls">m-4 / mx-auto / mt-1</td><td>margin（mx-autoは左右中央寄せ）</td></tr>
+  <tr><td class="cls">gap-4</td><td>flex / grid の子要素間</td></tr>
+  <tr><td class="cls">space-x-2 / space-y-4</td><td>子要素間の余白（横/縦）</td></tr>
+</table>
+
+<div class="tip">
+  数値の目安: <code>1 = 4px</code>, <code>2 = 8px</code>, <code>4 = 16px</code>, <code>6 = 24px</code>, <code>8 = 32px</code>。
+  「<code>p-4</code>って何px？」と迷ったら<strong>4倍</strong>を思い出す。
+</div>
+
+<h2 id="sizing">4. サイズ（width / height）</h2>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">w-full</td><td>幅100%</td></tr>
+  <tr><td class="cls">w-1/2</td><td>幅50%</td></tr>
+  <tr><td class="cls">w-64</td><td>幅 64 × 4 = 256px</td></tr>
+  <tr><td class="cls">max-w-2xl</td><td>最大幅 42rem (約672px)</td></tr>
+  <tr><td class="cls">max-w-5xl</td><td>最大幅 64rem (約1024px)</td></tr>
+  <tr><td class="cls">min-w-full</td><td>最小幅100%（テーブルでよく使う）</td></tr>
+  <tr><td class="cls">h-screen</td><td>高さ画面いっぱい</td></tr>
+</table>
+
+<h2 id="typography">5. テキスト</h2>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">text-xs</td><td>0.75rem (12px)</td></tr>
+  <tr><td class="cls">text-sm</td><td>0.875rem (14px)</td></tr>
+  <tr><td class="cls">text-base</td><td>1rem (16px) ※デフォルト</td></tr>
+  <tr><td class="cls">text-lg / text-xl / text-3xl</td><td>大きめの文字</td></tr>
+  <tr><td class="cls">font-medium / font-semibold / font-bold</td><td>太さ</td></tr>
+  <tr><td class="cls">text-left / text-center / text-right</td><td>揃え</td></tr>
+  <tr><td class="cls">uppercase / lowercase / capitalize</td><td>大文字小文字変換</td></tr>
+  <tr><td class="cls">underline</td><td>下線</td></tr>
+  <tr><td class="cls">leading-tight / leading-relaxed</td><td>行の高さ</td></tr>
+  <tr><td class="cls">font-mono</td><td>等幅フォント（金額表示で使用）</td></tr>
+</table>
+
+<div class="tip">
+  ⚠️ kakeibo-appに <code>text-gright</code> という typo あり。正しくは <code>text-right</code>。
+</div>
+
+<h2 id="colors">6. 色（背景・文字・枠）</h2>
+
+<h3>パターン</h3>
+<p><code>{プロパティ}-{色名}-{濃さ50〜950}</code></p>
+
+<table>
+  <tr><th>プレフィックス</th><th>用途</th><th>例</th></tr>
+  <tr><td class="cls">bg-</td><td>背景色</td><td><code>bg-white</code> / <code>bg-emerald-600</code></td></tr>
+  <tr><td class="cls">text-</td><td>文字色</td><td><code>text-gray-700</code></td></tr>
+  <tr><td class="cls">border-</td><td>枠線色</td><td><code>border-gray-300</code></td></tr>
+  <tr><td class="cls">ring-</td><td>フォーカスリング色</td><td><code>focus:ring-emerald-500</code></td></tr>
+  <tr><td class="cls">divide-</td><td>子要素間の区切り線色</td><td><code>divide-gray-200</code></td></tr>
+</table>
+
+<h3>濃さの目安</h3>
+<table>
+  <tr><th>濃さ</th><th>用途</th></tr>
+  <tr><td>50 / 100</td><td>淡い背景（成功/エラーメッセージの背景など）</td></tr>
+  <tr><td>300 / 400</td><td>枠線・薄い文字</td></tr>
+  <tr><td>500 / 600</td><td>主役の色（ボタン背景など）</td></tr>
+  <tr><td>700 / 800</td><td>濃い文字・ホバー時の色</td></tr>
+</table>
+
+<h3>kakeibo-appで使っている主要色</h3>
+<table>
+  <tr><th>シーン</th><th>色</th></tr>
+  <tr><td>テーマカラー（ボタン・金額）</td><td><code>emerald-600</code> + hover <code>emerald-700</code></td></tr>
+  <tr><td>カテゴリバッジ</td><td>背景<code>emerald-100</code> + 文字<code>emerald-700</code></td></tr>
+  <tr><td>編集リンク</td><td><code>blue-600</code></td></tr>
+  <tr><td>削除リンク</td><td><code>red-600</code></td></tr>
+  <tr><td>成功メッセージ</td><td>背景<code>emerald-100</code> 枠<code>emerald-300</code> 文字<code>emerald-800</code></td></tr>
+  <tr><td>エラーメッセージ</td><td>背景<code>red-50</code> 枠<code>red-200</code> 文字<code>red-700</code></td></tr>
+</table>
+
+<h2 id="border">7. 枠線・角丸・影</h2>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">border</td><td>1pxの枠線</td></tr>
+  <tr><td class="cls">border-2</td><td>2px</td></tr>
+  <tr><td class="cls">border-gray-300</td><td>枠線色</td></tr>
+  <tr><td class="cls">divide-y</td><td>子要素の間に横線（テーブル行区切りで使う）</td></tr>
+  <tr><td class="cls">rounded</td><td>少し角丸 (4px)</td></tr>
+  <tr><td class="cls">rounded-md</td><td>中くらい (6px)</td></tr>
+  <tr><td class="cls">rounded-lg</td><td>大きめ (8px)</td></tr>
+  <tr><td class="cls">rounded-full</td><td>完全な丸（バッジで使用）</td></tr>
+  <tr><td class="cls">shadow / shadow-md / shadow-lg</td><td>影</td></tr>
+  <tr><td class="cls">overflow-hidden</td><td>はみ出し非表示（角丸の表内コンテンツに必要）</td></tr>
+</table>
+
+<h2 id="state">8. ホバー・フォーカス・状態</h2>
+<p>クラスの前にプレフィックスをつけることで、状態に応じたスタイルが当たる。</p>
+<table>
+  <tr><th>プレフィックス</th><th>意味</th></tr>
+  <tr><td class="cls">hover:</td><td>マウスオーバー時</td></tr>
+  <tr><td class="cls">focus:</td><td>クリック・フォーカス時</td></tr>
+  <tr><td class="cls">active:</td><td>押下中</td></tr>
+  <tr><td class="cls">disabled:</td><td>disabled属性が付いている時</td></tr>
+</table>
+
+<pre><code>&lt;a class="text-blue-600 hover:underline"&gt;編集&lt;/a&gt;
+&lt;button class="bg-emerald-600 hover:bg-emerald-700"&gt;登録&lt;/button&gt;</code></pre>
+
+<h3>フォーカスリング（入力欄でよく使う）</h3>
+<pre><code>&lt;input class="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"&gt;</code></pre>
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">focus:outline-none</td><td>ブラウザのデフォルト枠線を消す</td></tr>
+  <tr><td class="cls">focus:ring-2</td><td>2pxのリングを表示</td></tr>
+  <tr><td class="cls">focus:ring-offset-2</td><td>リングを少し離す</td></tr>
+  <tr><td class="cls">focus:ring-emerald-500</td><td>リングの色</td></tr>
+  <tr><td class="cls">focus:border-emerald-500</td><td>枠線色も変える</td></tr>
+</table>
+
+<h2 id="form">9. フォーム部品</h2>
+<p>kakeibo-appの <code>_form.blade.php</code> でも使っている定番セット。</p>
+<pre><code>&lt;input type="text"
+       class="mt-1 w-full rounded-md border-gray-300 shadow-sm
+              focus:border-emerald-500 focus:ring-emerald-500"&gt;</code></pre>
+
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">mt-1</td><td>ラベルとの間に少し余白</td></tr>
+  <tr><td class="cls">w-full</td><td>幅100%</td></tr>
+  <tr><td class="cls">rounded-md</td><td>角丸</td></tr>
+  <tr><td class="cls">border-gray-300</td><td>淡い枠線</td></tr>
+  <tr><td class="cls">shadow-sm</td><td>軽い影</td></tr>
+  <tr><td class="cls">focus:border-emerald-500</td><td>フォーカス時に枠線を緑に</td></tr>
+  <tr><td class="cls">focus:ring-emerald-500</td><td>フォーカス時に緑のリング</td></tr>
+</table>
+
+<h3>ボタン</h3>
+<pre><code>&lt;button class="inline-flex items-center px-4 py-2
+               bg-emerald-600 hover:bg-emerald-700
+               text-white text-sm font-medium
+               rounded-md shadow"&gt;
+    登録する
+&lt;/button&gt;</code></pre>
+
+<h2 id="table">10. テーブル</h2>
+<pre><code>&lt;table class="min-w-full divide-y divide-gray-200"&gt;
+    &lt;thead class="bg-gray-50"&gt;
+        &lt;tr&gt;
+            &lt;th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase"&gt;日付&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody class="divide-y divide-gray-100"&gt;
+        &lt;tr&gt;
+            &lt;td class="px-4 py-3 text-sm text-gray-700"&gt;2026/05/06&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+
+<table>
+  <tr><th>クラス</th><th>意味</th></tr>
+  <tr><td class="cls">min-w-full</td><td>テーブルを親幅いっぱいに</td></tr>
+  <tr><td class="cls">divide-y</td><td>各行の間に横線</td></tr>
+  <tr><td class="cls">divide-gray-200</td><td>その線の色</td></tr>
+</table>
+
+<div class="tip">
+  ⚠️ <strong>th と td の text-* は揃える</strong>。kakeibo-appでヘッダー「操作」を <code>text-left</code>、ボディの「編集/削除」を <code>text-center</code> にしていて見た目がズレた事例あり。
+</div>
+
+<h2 id="responsive">11. レスポンシブ</h2>
+<p>画面幅でスタイルを切り替えるには、クラス名にプレフィックスを付ける。</p>
+<table>
+  <tr><th>プレフィックス</th><th>適用される画面幅</th><th>用途の目安</th></tr>
+  <tr><td class="cls">sm:</td><td>≧ 640px</td><td>小型タブレット以上</td></tr>
+  <tr><td class="cls">md:</td><td>≧ 768px</td><td>タブレット以上</td></tr>
+  <tr><td class="cls">lg:</td><td>≧ 1024px</td><td>ノートPC以上</td></tr>
+  <tr><td class="cls">xl:</td><td>≧ 1280px</td><td>デスクトップ</td></tr>
+</table>
+
+<pre><code>&lt;!-- スマホは padding を狭く、タブレット以上で広く --&gt;
+&lt;div class="px-2 sm:px-6 lg:px-8"&gt;...&lt;/div&gt;</code></pre>
+
+<div class="tip">
+  <strong>モバイルファースト:</strong> プレフィックスなしのクラスは「すべての画面サイズ」に当たる。
+  <code>sm:</code>などは<strong>「その幅以上」</strong>で上書きされる。スマホ用 → 画面が大きくなったら追加 で書く。
+</div>
+
+<h2>参考リンク</h2>
+<ul>
+  <li>公式ドキュメント: <code>https://tailwindcss.com/docs</code></li>
+  <li>クラス検索（公式）: <code>https://tailwindcss.com/docs/installation</code> 内のサーチ</li>
+</ul>
+
+<p class="meta">— 作成: Claude Code (2026-05-06)</p>
+
+</body>
+</html>

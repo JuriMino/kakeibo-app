@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>共通フォーム部品の value 記述 解説</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.8;
+    max-width: 920px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 { border-bottom: 3px solid #2c7be5; padding-bottom: 10px; }
+  h2 {
+    margin-top: 36px;
+    border-left: 5px solid #2c7be5;
+    background: #eef4ff;
+    padding: 8px 14px;
+  }
+  h3 { margin-top: 24px; color: #2c7be5; }
+  pre {
+    background: #1e1e1e;
+    color: #f5f5f5;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 14px;
+  }
+  code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    color: #c7254e;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0 20px;
+    background: #fff;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #2c7be5; color: #fff; }
+  .tip {
+    background: #fff7d6;
+    border-left: 5px solid #f0b400;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .ok {
+    background: #e7f7ed;
+    border-left: 5px solid #2bb673;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .danger {
+    background: #ffe7e7;
+    border-left: 5px solid #e53935;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .meta { color: #777; font-size: 0.9em; }
+  .case {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+  }
+  .case h4 { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<h1>共通フォーム部品 (_form.blade.php) の value 記述 解説</h1>
+<p class="meta">作成日: 2026-05-06 / 対象: kakeibo-app の resources/views/expenses/_form.blade.php</p>
+
+<h2>このドキュメントの目的</h2>
+<p>
+  新規作成画面と編集画面で同じフォームを使い回すために、
+  <code>_form.blade.php</code> を共通部品にしている。<br>
+  その中で <strong><code>value</code> 属性に複雑な式</strong>が出てくるが、
+  なぜそう書くのか・各演算子の意味が直感的に分かりにくいので、ここで一つずつ解説する。
+</p>
+
+<h2>共通フォームが満たすべき要件</h2>
+<p>同じフォーム部品でも、画面の状況によって value に入れたい値が違う。</p>
+<table>
+  <tr><th>状況</th><th>valueに入れたい値</th></tr>
+  <tr><td>① 新規作成画面（最初の表示）</td><td>空</td></tr>
+  <tr><td>② 編集画面（最初の表示）</td><td>DBから取ってきた既存の値</td></tr>
+  <tr><td>③ バリデーション失敗で戻ってきた時</td><td>ユーザーが入力した直前の値（消えると困る）</td></tr>
+</table>
+
+<p>これら3つを<strong>1行で実現する</strong>のが <code>old()</code> + ヌル合体 + ヌル安全演算子の組み合わせ。</p>
+
+<h2>実際のコード（kakeibo-app から抜粋）</h2>
+
+<pre><code>&lt;!-- タイトル --&gt;
+&lt;input type="text" name="title"
+       value="{{ old('title', $expense?-&gt;title) }}"&gt;
+
+&lt;!-- 金額 --&gt;
+&lt;input type="number" name="amount"
+       value="{{ old('amount', $expense?-&gt;amount) }}"&gt;
+
+&lt;!-- 支出日 --&gt;
+&lt;input type="date" name="spent_on"
+       value="{{ old('spent_on', $expense?-&gt;spent_on?-&gt;format('Y-m-d')) ?? now()-&gt;format('Y-m-d') }}"&gt;
+
+&lt;!-- カテゴリ（select の selected 判定） --&gt;
+&lt;option value="{{ $category }}"
+        {{ old('category', $expense?-&gt;category) === $category ? 'selected' : '' }}&gt;
+    {{ $category }}
+&lt;/option&gt;
+
+&lt;!-- メモ --&gt;
+&lt;textarea name="memo"&gt;{{ old('memo', $expense?-&gt;memo) }}&lt;/textarea&gt;</code></pre>
+
+<h2>1. <code>{{ ... }}</code> （Blade出力）</h2>
+<p>
+  Blade テンプレートで <code>{{ $value }}</code> と書くと、
+  PHPの値をHTMLとして出力する。<br>
+  <strong>自動でHTMLエスケープされる</strong>ので、ユーザー入力をそのまま埋め込んでもXSS対策になる。
+</p>
+<pre><code>{{ $expense-&gt;title }}    // &lt;script&gt; などが入っていても安全に表示される</code></pre>
+
+<h2>2. <code>old()</code> ヘルパー</h2>
+<p>
+  Laravelが提供する関数。
+  「直前のリクエストでユーザーが送信した値」をセッションから取り出す。
+  バリデーション失敗で画面が戻ってきた時に、入力欄を空にしないために使う。
+</p>
+
+<h3>シグネチャ</h3>
+<pre><code>old(string $key, mixed $default = null)</code></pre>
+
+<table>
+  <tr><th>引数</th><th>意味</th></tr>
+  <tr><td>第1引数 <code>'title'</code></td><td>セッションから探したい入力名（input の name属性）</td></tr>
+  <tr><td>第2引数 <code>$expense?-&gt;title</code></td><td>old が無かった時のフォールバック値</td></tr>
+</table>
+
+<h3>動きの違い</h3>
+<table>
+  <tr><th>状況</th><th><code>old('title', $expense?->title)</code> が返す値</th></tr>
+  <tr><td>新規作成（初回表示）</td><td>old なし、$expense は null → <strong>null（空）</strong></td></tr>
+  <tr><td>編集（初回表示）</td><td>old なし → <strong>$expense->title</strong></td></tr>
+  <tr><td>バリデーション失敗で戻ってきた</td><td>old あり → <strong>ユーザーが直前に入力した値</strong></td></tr>
+</table>
+
+<div class="ok">
+  <strong>ポイント:</strong>
+  「優先順位」で覚える。<br>
+  ① ユーザーが直前に入れた値（old） → ② DBにある既存値（$expense） → ③ 空。
+</div>
+
+<h2>3. <code>?-&gt;</code> ヌル安全演算子（PHP 8.0+）</h2>
+<p>
+  オブジェクトが <code>null</code> の時にプロパティアクセスしてもエラーにならない演算子。
+</p>
+<pre><code>$expense?-&gt;title
+
+// 等価なコード:
+$expense !== null ? $expense-&gt;title : null</code></pre>
+
+<h3>なぜ必要か</h3>
+<p>
+  <code>create.blade.php</code> から <code>_form.blade.php</code> を呼ぶ時、
+  まだDBに保存されていないので <code>$expense = null</code> を渡している。
+</p>
+<pre><code>&lt;!-- create.blade.php --&gt;
+@include('expenses._form', [
+    'expense' =&gt; null,        ← null を渡す
+    'categories' =&gt; $categories,
+    'submit' =&gt; '登録する',
+])</code></pre>
+
+<p>
+  もし普通の <code>$expense-&gt;title</code> と書くと、新規作成時に
+  <strong>「nullに対してプロパティアクセスした」エラー</strong>になる。
+  <code>?-&gt;</code> を使えば null の時はそのまま null を返してくれる。
+</p>
+
+<div class="danger">
+  <strong>NG:</strong> <code>$expense-&gt;title</code> → 新規作成画面でエラー<br>
+  <strong>OK:</strong> <code>$expense?-&gt;title</code> → 新規作成画面では null になるだけ
+</div>
+
+<h3>連鎖もできる</h3>
+<pre><code>$expense?-&gt;spent_on?-&gt;format('Y-m-d')
+
+// 意味: $expense が null なら null。
+//      spent_on が null でも null。
+//      両方あれば 'Y-m-d' でフォーマット。</code></pre>
+
+<h2>4. <code>??</code> ヌル合体演算子</h2>
+<p>
+  「左辺が null なら右辺を使う」演算子（PHP 7.0+）。
+</p>
+<pre><code>$x ?? 'デフォルト値'
+
+// 等価なコード:
+isset($x) ? $x : 'デフォルト値'</code></pre>
+
+<h3>支出日の例で見る</h3>
+<pre><code>{{ old('spent_on', $expense?-&gt;spent_on?-&gt;format('Y-m-d')) ?? now()-&gt;format('Y-m-d') }}</code></pre>
+
+<p>分解すると次の優先順位:</p>
+<ol>
+  <li><code>old('spent_on', ...)</code> → バリデーション失敗時のユーザー入力値</li>
+  <li><code>$expense?-&gt;spent_on?-&gt;format('Y-m-d')</code> → 編集時のDB値</li>
+  <li><code>?? now()-&gt;format('Y-m-d')</code> → どちらも null なら<strong>今日の日付</strong>を入れる</li>
+</ol>
+
+<div class="ok">
+  支出日だけ <code>??</code> を使っているのは、新規作成画面で
+  「最初から今日の日付が入っていると入力が楽」だから。
+  タイトルや金額は空欄スタートが自然なので不要。
+</div>
+
+<h2>5. 三項演算子 <code>... ? 'A' : 'B'</code> （selected判定）</h2>
+<pre><code>{{ old('category', $expense?-&gt;category) === $category ? 'selected' : '' }}</code></pre>
+
+<p>意味:</p>
+<ul>
+  <li>左辺：「現在選ばれているべきカテゴリ」（old or DB値）</li>
+  <li>右辺：「ループ中の選択肢」（$category）</li>
+  <li>一致したら <code>selected</code> を出力、違えば空文字</li>
+</ul>
+
+<p>これにより、編集画面を開いた時に保存済みカテゴリが最初から選ばれた状態になる。</p>
+
+<h2>6. 全部つなげて読む練習</h2>
+
+<div class="case">
+<h4>例: 支出日の value</h4>
+<pre><code>value="{{ old('spent_on', $expense?-&gt;spent_on?-&gt;format('Y-m-d')) ?? now()-&gt;format('Y-m-d') }}"</code></pre>
+
+<p><strong>新規作成画面で読むと:</strong></p>
+<ol>
+  <li>old('spent_on', ...) → 初回なので old は無い。第2引数を見る。</li>
+  <li>$expense は null なので、$expense?-&gt;spent_on は null。さらに ?-&gt;format も null。</li>
+  <li>old全体としては null が返る。</li>
+  <li>?? の右辺 now()-&gt;format('Y-m-d') が使われる。</li>
+  <li>結果: 今日の日付が入った状態でフォームが開く。</li>
+</ol>
+
+<p><strong>編集画面で読むと:</strong></p>
+<ol>
+  <li>old('spent_on', ...) → 初回なので old は無い。第2引数を見る。</li>
+  <li>$expense は支出オブジェクト。spent_on は Carbon インスタンス。</li>
+  <li>$expense?-&gt;spent_on?-&gt;format('Y-m-d') → '2026-05-06' のような文字列が返る。</li>
+  <li>これは null ではないので ?? の右辺は使われない。</li>
+  <li>結果: DBに保存されている日付がフォームに入る。</li>
+</ol>
+
+<p><strong>バリデーション失敗で戻ってきた時:</strong></p>
+<ol>
+  <li>old('spent_on', ...) → 直前にユーザーが入力した値が返る。</li>
+  <li>その時点でフォールバックは見ない。</li>
+  <li>結果: 入力した値が消えずに残る。</li>
+</ol>
+</div>
+
+<h2>7. まとめ表</h2>
+<table>
+  <tr><th>記号</th><th>名前</th><th>目的</th></tr>
+  <tr><td><code>{{ }}</code></td><td>Blade出力</td><td>PHP値をHTMLエスケープして表示</td></tr>
+  <tr><td><code>old()</code></td><td>oldヘルパー</td><td>バリデーション失敗時の値復元</td></tr>
+  <tr><td><code>?-&gt;</code></td><td>ヌル安全演算子</td><td>nullに対するアクセスでエラーを出さない</td></tr>
+  <tr><td><code>??</code></td><td>ヌル合体演算子</td><td>nullなら別の値を使う</td></tr>
+  <tr><td><code>? :</code></td><td>三項演算子</td><td>条件で値を切り替え（selected判定で使用）</td></tr>
+</table>
+
+<h2>8. よくあるハマりどころ</h2>
+<div class="danger">
+  <ul>
+    <li><strong>create.blade.php で expense を渡し忘れる</strong> → 「Undefined variable $expense」エラー。null でも良いので必ず渡す。</li>
+    <li><strong>?-&gt; を使わずに -&gt; を使う</strong> → 新規作成画面で「null上のプロパティアクセス」エラー。</li>
+    <li><strong>old('title', $expense-&gt;title) と書く</strong> → 上と同じ。<code>$expense?-&gt;title</code> にする。</li>
+    <li><strong>spent_on を文字列のまま比較</strong> → date型inputには <code>Y-m-d</code> 形式の文字列が必要。Carbonインスタンスのままだとブラウザが認識しないので <code>format()</code> で文字列化する。</li>
+  </ul>
+</div>
+
+<h2>9. 参考: 共通部品の呼び出し方</h2>
+
+<pre><code>&lt;!-- create.blade.php （新規作成） --&gt;
+@include('expenses._form', [
+    'expense'    =&gt; null,
+    'categories' =&gt; $categories,
+    'submit'     =&gt; '登録する',
+])</code></pre>
+
+<pre><code>&lt;!-- edit.blade.php （編集） --&gt;
+@include('expenses._form', [
+    'expense'    =&gt; $expense,
+    'categories' =&gt; $categories,
+    'submit'     =&gt; '更新する',
+])</code></pre>
+
+<p>
+  この2つで <code>$expense</code> の中身だけ変えれば、同じフォーム部品が
+  両方の画面で正しく動くようになる。それを支えているのが
+  <code>old()</code> と <code>?-&gt;</code> と <code>??</code> の組み合わせ、というわけ。
+</p>
+
+<p class="meta">— 作成: Claude Code (2026-05-06)</p>
+
+</body>
+</html>

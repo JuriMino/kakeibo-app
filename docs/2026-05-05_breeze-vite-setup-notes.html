@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Breeze導入後のセットアップ注意点 (2026-05-05)</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.8;
+    max-width: 880px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #2c7be5;
+    padding-bottom: 10px;
+  }
+  h2 {
+    margin-top: 36px;
+    border-left: 5px solid #2c7be5;
+    padding-left: 12px;
+    background: #eef4ff;
+    padding: 8px 12px;
+  }
+  h3 {
+    margin-top: 24px;
+    color: #2c7be5;
+  }
+  pre {
+    background: #1e1e1e;
+    color: #f5f5f5;
+    padding: 14px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 14px;
+  }
+  code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+  }
+  .note {
+    background: #fff7d6;
+    border-left: 5px solid #f0b400;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .danger {
+    background: #ffe7e7;
+    border-left: 5px solid #e53935;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  .ok {
+    background: #e7f7ed;
+    border-left: 5px solid #2bb673;
+    padding: 12px 16px;
+    margin: 16px 0;
+    border-radius: 4px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    background: #fff;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+  }
+  th {
+    background: #2c7be5;
+    color: #fff;
+  }
+  ul, ol {
+    margin-left: 20px;
+  }
+  .meta {
+    color: #777;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Laravel Breeze導入後のセットアップ注意点</h1>
+<p class="meta">作成日: 2026-05-05 / プロジェクト: kakeibo-app (Laravel + Sail + Vite)</p>
+
+<h2>このドキュメントの目的</h2>
+<p>
+  Laravelプロジェクトの作成までは問題なくできたが、
+  <strong>認証機能のためにLaravel Breezeをインストールしてから複数回エラー</strong>が発生した。
+  次回以降、同じハマりどころで詰まらないようにするためのメモ。
+</p>
+
+<h2>環境</h2>
+<table>
+  <tr><th>項目</th><th>内容</th></tr>
+  <tr><td>OS</td><td>macOS (Darwin 24.6.0)</td></tr>
+  <tr><td>開発環境</td><td>Laravel Sail (Docker)</td></tr>
+  <tr><td>フロントビルド</td><td>Vite 8.x</td></tr>
+  <tr><td>パッケージマネージャ</td><td>npm</td></tr>
+  <tr><td>コンテナ内パス</td><td>/var/www/html</td></tr>
+</table>
+
+<h2>1. Breezeインストールで起きたエラー</h2>
+
+<h3>エラー① axiosが見つからない</h3>
+<pre><code>[plugin:vite:import-analysis] Failed to resolve import "axios"
+from "resources/js/bootstrap.js". Does the file exist?</code></pre>
+
+<div class="note">
+  <strong>原因:</strong>
+  <code>resources/js/bootstrap.js</code> は <code>import axios from 'axios'</code> をしているが、
+  <code>package.json</code> の <code>dependencies</code> に <code>axios</code> が記載されていない。
+  Laravel 11以降のスケルトンでは axios がデフォルトで含まれていない構成があるため、
+  Breeze導入後にViteを起動すると import 解決に失敗する。
+</div>
+
+<h3>解決方法</h3>
+<pre><code># Sail（Docker内）で axios をインストール
+./vendor/bin/sail npm install axios
+
+# またはホスト側で
+npm install axios</code></pre>
+
+<h3>エラー② Cannot find native binding</h3>
+<pre><code>Error: Cannot find native binding. npm has a bug related to optional dependencies
+(https://github.com/npm/cli/issues/4828).
+Please try `npm i` again after removing both package-lock.json and node_modules directory.</code></pre>
+
+<div class="note">
+  <strong>原因:</strong>
+  ホスト（macOS）で <code>npm install</code> した場合、Mac用のネイティブバイナリ（rollup等）が入る。
+  しかし実際の <code>npm run dev</code> は Docker（Linux）内で実行されるため、
+  バイナリのプラットフォームが合わずに読み込み失敗する。
+</div>
+
+<h3>解決方法</h3>
+<pre><code># 1. ホストで作られた node_modules / package-lock.json を削除
+rm -rf node_modules package-lock.json
+
+# 2. Sail（Linuxコンテナ）内で再インストール
+./vendor/bin/sail npm install
+
+# 3. 開発サーバ起動
+./vendor/bin/sail npm run dev</code></pre>
+
+<div class="ok">
+  <strong>結果:</strong> localhost がエラーなしで表示されるようになった。
+</div>
+
+<h2>2. 次回以降のチェックリスト</h2>
+
+<h3>Breezeインストール直後にやること</h3>
+<ol>
+  <li>
+    <code>php artisan breeze:install</code> 実行後、
+    <code>package.json</code> に <code>axios</code> が含まれているか確認する。
+    含まれていなければ追加する。
+  </li>
+  <li>
+    <code>npm install</code> は <strong>必ず Sail（Docker）内</strong>で実行する。
+    <pre><code>./vendor/bin/sail npm install</code></pre>
+  </li>
+  <li>
+    <code>npm run dev</code> も <strong>必ず Sail 内</strong>で実行する。
+    <pre><code>./vendor/bin/sail npm run dev</code></pre>
+  </li>
+  <li>マイグレーションを忘れずに。
+    <pre><code>./vendor/bin/sail artisan migrate</code></pre>
+  </li>
+</ol>
+
+<h3>やってはいけないこと</h3>
+<div class="danger">
+  <ul>
+    <li>ホスト側の <code>npm install</code> と Sail 側の <code>npm install</code> を混ぜて使う（バイナリ不整合の原因）。</li>
+    <li>存在しないスクリプト（例: <code>sail npm run clean-install</code>）を実行する。<code>package.json</code> の <code>scripts</code> に定義があるものしか動かない。</li>
+    <li>エラーが出たときに <code>node_modules</code> だけ消して <code>package-lock.json</code> を残す（古いロックファイルが原因の不整合が再現する）。両方消すこと。</li>
+  </ul>
+</div>
+
+<h2>3. トラブル時の復旧手順（保存版）</h2>
+
+<pre><code># フロントが壊れたら、このセットで大体直る
+rm -rf node_modules package-lock.json
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run dev</code></pre>
+
+<p>それでも直らない場合:</p>
+<pre><code># Sailコンテナを再ビルド
+./vendor/bin/sail down
+./vendor/bin/sail up -d --build</code></pre>
+
+<h2>4. 用語メモ</h2>
+<table>
+  <tr><th>用語</th><th>意味</th></tr>
+  <tr>
+    <td>axios</td>
+    <td>JavaScript用のHTTPクライアントライブラリ。Laravel + フロント間でAjax通信するための標準ツール。<code>window.axios</code> としてグローバルに使えるよう Laravel が <code>bootstrap.js</code> で読み込んでいる。</td>
+  </tr>
+  <tr>
+    <td>Vite</td>
+    <td>フロントエンドのビルドツール。<code>npm run dev</code> で開発サーバが起動し、CSS/JSの変更が即時反映される。</td>
+  </tr>
+  <tr>
+    <td>Laravel Sail</td>
+    <td>LaravelをDockerで動かすための公式ラッパー。<code>./vendor/bin/sail</code> 経由でコンテナ内コマンドを実行する。</td>
+  </tr>
+  <tr>
+    <td>Breeze</td>
+    <td>Laravelの認証スターターキット。ログイン/登録/パスワードリセット等の画面とロジックを一括導入できる。</td>
+  </tr>
+</table>
+
+<h2>5. データベース名の不一致によるアクセス拒否エラー</h2>
+
+<h3>発生したエラー</h3>
+<pre><code>$ ./vendor/bin/sail mysql kakeibo_app -e "DESCRIBE expenses;"
+mysql&gt; use kakeibo_app;
+ERROR 1044 (42000): Access denied for user 'sail'@'%' to database 'kakeibo_app'</code></pre>
+
+<div class="note">
+  <strong>原因:</strong>
+  <code>.env</code> の <code>DB_DATABASE</code> が初期値の <code>laravel</code> のままだったため、
+  Sail起動時に自動作成されたのは <code>laravel</code> データベースで、
+  <code>kakeibo_app</code> は存在しなかった。
+  存在しないDBにアクセスしようとしたため「Access denied」と表示された
+  （MySQLは「DBが無い」場合でも権限エラーとして返すことがある）。
+</div>
+
+<h3>確認手順</h3>
+<pre><code># .env のDB設定を確認
+grep DB_ .env
+
+# 実際に存在するDB一覧を確認
+./vendor/bin/sail mysql -e "SHOW DATABASES;"</code></pre>
+
+<h3>解決方法（プロジェクト名に合わせて kakeibo_app に統一する場合）</h3>
+<ol>
+  <li>
+    <code>.env</code> を編集
+    <pre><code>DB_DATABASE=kakeibo_app</code></pre>
+  </li>
+  <li>
+    Sailを再起動して compose.yaml の環境変数を読み直す
+    （Sailは <code>MYSQL_DATABASE: ${DB_DATABASE}</code> で起動時にDBを自動作成する）
+    <pre><code>./vendor/bin/sail down
+./vendor/bin/sail up -d</code></pre>
+  </li>
+  <li>
+    マイグレーションを実行
+    <pre><code>./vendor/bin/sail artisan migrate</code></pre>
+  </li>
+  <li>
+    確認
+    <pre><code>./vendor/bin/sail mysql kakeibo_app -e "DESCRIBE expenses;"</code></pre>
+  </li>
+</ol>
+
+<div class="ok">
+  <strong>ポイント:</strong>
+  プロジェクト作成直後（マイグレーションの前）に
+  <code>.env</code> の <code>DB_DATABASE</code> をプロジェクト名と揃えておくのが一番ラク。
+  後から変えると、古いDBに作られたテーブルとの不一致が起きやすい。
+</div>
+
+<h3>やってはいけないこと</h3>
+<div class="danger">
+  <ul>
+    <li>
+      <code>.env</code> を変えただけで <code>sail up -d</code> し直さない。
+      compose.yaml は起動時に環境変数を読むので、変更後は <strong>再起動が必須</strong>。
+    </li>
+    <li>
+      アクセス拒否エラーを見て、いきなり sail ユーザーの権限を疑う。
+      まず <strong>SHOW DATABASES でDBの存在を確認</strong>するのが先。
+    </li>
+  </ul>
+</div>
+
+<h2>6. 学び</h2>
+<ul>
+  <li>Docker（Sail）を使うときは、<strong>npm系のコマンドは原則すべてコンテナ内で実行する</strong>と覚えておく。</li>
+  <li>「Cannot find native binding」が出たら、ほぼ <strong>ホスト/コンテナのバイナリ不整合</strong>を疑う。</li>
+  <li>エラーメッセージは英語でも丁寧に読むと、解決手順がそのまま書いてあることが多い（今回も <code>remove both package-lock.json and node_modules</code> と明記されていた）。</li>
+  <li>プロジェクト作成直後に <code>.env</code> の <code>DB_DATABASE</code> をプロジェクト名と揃えておくと、後でDB名不一致のハマりが起きない。</li>
+</ul>
+
+<p class="meta">— 作成: Claude Code (2026-05-05)</p>
+
+</body>
+</html>
